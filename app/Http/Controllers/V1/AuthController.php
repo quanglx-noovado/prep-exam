@@ -2,26 +2,28 @@
 
 namespace App\Http\Controllers\V1;
 
-use App\Http\Requests\Auth\LoginRequest;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Routing\Controller as BaseController;
-use Src\Application\Auth\Commands\LoginCommand;
-use Src\Application\Auth\Commands\LoginCommandHandler;
+use League\Tactician\CommandBus;
+use Src\Application\Auth\Command\LoginCommand;
 
 class AuthController extends BaseController
 {
     public function __construct(
-        private readonly LoginCommandHandler $loginHandler
-    ) {}
+        private readonly CommandBus $commandBus
+    ) {
 
-    public function login(LoginRequest $request): JsonResponse
+    }
+
+    public function login(Request $request): JsonResponse
     {
         $command = new LoginCommand(
             email: $request->input('email'),
             password: $request->input('password')
         );
 
-        $token = $this->loginHandler->handle($command);
+        $token = $this->commandBus->handle($command);
 
         return response()->json([
             'token' => $token,
