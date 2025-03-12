@@ -1,6 +1,6 @@
 <?php
 
-namespace Src\Domain\Auth;
+namespace Src\Domain\Auth\Entity;
 
 class User
 {

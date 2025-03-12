@@ -3,9 +3,9 @@
 namespace Src\Infrastructure\Persistence\Mysql;
 
 use App\Models\User;
+use Src\Domain\Auth\Entity\User as UserEntity;
 use Src\Domain\Auth\Exception\UserNotFoundException;
-use Src\Domain\Auth\User as UserEntity;
-use Src\Domain\Auth\UserRepository;
+use Src\Domain\Auth\Repository\UserRepository;
 
 class MysqlUserRepository implements UserRepository
 {
@@ -22,6 +22,25 @@ class MysqlUserRepository implements UserRepository
             throw new UserNotFoundException();
         }
 
+        return $this->buildEntity($user);
+    }
+
+    /**
+     * @throws UserNotFoundException
+     */
+    public function getById(int $id): UserEntity
+    {
+        $user = User::query()->where('id', $id)->first();
+
+        if (!$user) {
+            throw new UserNotFoundException();
+        }
+
+        return $this->buildEntity($user);
+    }
+
+    private function buildEntity(User $user): UserEntity
+    {
         $entity = new UserEntity(
             email: $user->email,
             password: $user->password,

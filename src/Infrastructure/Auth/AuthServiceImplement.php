@@ -4,7 +4,7 @@ namespace Src\Infrastructure\Auth;
 
 use App\Models\User;
 use Src\Domain\Auth\AuthService;
-use Src\Domain\Auth\User as UserEntity;
+use Src\Domain\Auth\Entity\User as UserEntity;
 
 class AuthServiceImplement implements AuthService
 {
