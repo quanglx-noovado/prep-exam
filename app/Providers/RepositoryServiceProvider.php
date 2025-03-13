@@ -4,8 +4,10 @@ namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use Src\Domain\Auth\Repository\DeviceRepository;
+use Src\Domain\Auth\Repository\OtpRepository;
 use Src\Domain\Auth\Repository\UserRepository;
 use Src\Infrastructure\Persistence\Mysql\MysqlDeviceRepository;
+use Src\Infrastructure\Persistence\Mysql\MysqlOtpRepository;
 use Src\Infrastructure\Persistence\Mysql\MysqlUserRepository;
 
 class RepositoryServiceProvider extends ServiceProvider
@@ -14,5 +16,6 @@ class RepositoryServiceProvider extends ServiceProvider
     {
         $this->app->singleton(UserRepository::class, MysqlUserRepository::class);
         $this->app->singleton(DeviceRepository::class, MysqlDeviceRepository::class);
+        $this->app->singleton(OtpRepository::class, MysqlOtpRepository::class);
     }
 }

@@ -17,4 +17,7 @@ use Illuminate\Support\Facades\Route;
 Route::group(['prefix' => 'v1'], function () {
     Route::post('login', [AuthController::class, 'login']);
     Route::post('send-otp', [AuthController::class, 'sendOtp']);
+    Route::post('verify-new-device', [AuthController::class, 'verifyNewDevice']);
+    Route::post('verify-remove-device', [AuthController::class, 'verifyRemoveDevice']);
+    Route::get('active-devices', [AuthController::class, 'getListActiveDevice']);
 });

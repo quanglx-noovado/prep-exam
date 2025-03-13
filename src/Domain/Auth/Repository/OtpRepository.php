@@ -7,7 +7,7 @@ use Src\Domain\Auth\Enum\OtpPurpose;
 
 interface OtpRepository
 {
-    public function getActiveOtp(int $userId, int $deviceId, OtpPurpose $purpose): Otp;
+    public function getLatestOtp(int $userId, int $deviceId, OtpPurpose $purpose): Otp;
 
     public function create(Otp $otp): Otp;
 

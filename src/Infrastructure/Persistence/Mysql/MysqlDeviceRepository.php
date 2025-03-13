@@ -83,6 +83,11 @@ class MysqlDeviceRepository implements DeviceRepository
         return $data;
     }
 
+    public function countActiveDevice(int $userId): int
+    {
+        return DeviceModel::query()->where('user_id', $userId)->where('is_active', true)->count();
+    }
+
     private function buildEntity(DeviceModel $device): Device
     {
         $entity = new Device(

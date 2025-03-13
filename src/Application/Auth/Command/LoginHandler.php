@@ -12,6 +12,7 @@ use Src\Domain\Auth\Exception\AuthenticationException;
 use Src\Domain\Auth\Exception\DeviceInvalidException;
 use Src\Domain\Auth\Exception\DeviceLimitExceededException;
 use Src\Domain\Auth\Exception\DeviceNotFoundException;
+use Src\Domain\Auth\Exception\UserNotFoundException;
 use Src\Domain\Auth\Repository\DeviceRepository;
 use Src\Domain\Auth\Repository\UserRepository;
 
@@ -28,6 +29,7 @@ class LoginHandler
      * @throws DeviceLimitExceededException
      * @throws AuthenticationException
      * @throws DeviceInvalidException
+     * @throws UserNotFoundException
      */
     public function handle(LoginCommand $command): string
     {
@@ -67,12 +69,11 @@ class LoginHandler
      */
     private function handleInactiveDevice(User $user, DeviceEntity $device): string
     {
-        $activeDevices = $this->deviceRepository->getListActiveDevice($user->getId());
+        $countDeviceActive = $this->deviceRepository->countActiveDevice($user->getId());
 
-        if (count($activeDevices) >= Device::MAX_ACTIVE_DEVICES) {
+        if ($countDeviceActive >= Device::MAX_ACTIVE_DEVICES) {
             throw new DeviceLimitExceededException(
                 'Maximum active devices reached. Please deactivate another device first.',
-                $activeDevices,
                 $device->getDeviceToken()
             );
         }

@@ -25,7 +25,6 @@ class SendOtpHandler
     /**
      * Thiếu:
      * Logic check số lần gửi otp trong 1h. Có đang bị block không cho gửi otp khi nhập sai quá nhiều lần không
-     * Chưa implement otp repository và service gửi otp
      */
 
     /**
@@ -48,6 +47,6 @@ class SendOtpHandler
         );
         $entity = $this->otpRepository->create($entity);
         $service = SendOTPFactory::create($command->type);
-        $service->sendOTP($entity);
+        $service->sendOTP($entity, $user);
     }
 }

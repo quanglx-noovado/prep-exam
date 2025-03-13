@@ -22,4 +22,6 @@ interface DeviceRepository
     public function create(Device $device): Device;
 
     public function getListActiveDevice(int $userId): array;
+
+    public function countActiveDevice(int $userId): int;
 }

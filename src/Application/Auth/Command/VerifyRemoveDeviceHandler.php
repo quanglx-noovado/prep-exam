@@ -17,7 +17,7 @@ use Src\Domain\Auth\Repository\DeviceRepository;
 use Src\Domain\Auth\Repository\OtpRepository;
 use Src\Domain\Auth\Repository\UserRepository;
 
-class VerifyNewDeviceHandler
+class VerifyRemoveDeviceHandler
 {
     public function __construct(
         private readonly OtpRepository $otpRepository,
@@ -27,30 +27,29 @@ class VerifyNewDeviceHandler
     ) {
     }
 
+
     /**
      * Thiếu:
-     * Logic báo otp đã expired
-     * Ghi log khi otp không hợp lệ
-     * Đếm số lần otp không hợp lệ để block user
-     * Đang lặp hàm với bên login handler để check số device active
-     * /
+     * Logic check số lần gửi otp trong 1h. Có đang bị block không cho gửi otp khi nhập sai quá nhiều lần không
+     * Check verify is null
+     */
+
+    /**
      *
-     * /**
      * @throws DeviceNotFoundException
      * @throws UserNotFoundException
      * @throws OtpInvalidException
      * @throws DeviceLimitExceededException
      */
-    public function handle(VerifyNewDeviceCommand $command): string
+    public function handle(VerifyRemoveDeviceCommand $command): string
     {
         $device = $this->deviceRepository->getByDeviceToken($command->deviceToken);
         $user = $this->userRepository->getById($device->getUserId());
         $otp = $this->otpRepository->getLatestOtp(
             userId: $user->getId(),
             deviceId: $device->getId(),
-            purpose: OtpPurpose::NEW_DEVICE
+            purpose: OtpPurpose::REMOVE_DEVICE
         );
-
         if ($otp->getExpiresAt()->isPast()) {
             throw new OtpInvalidException('OTP has expired');
         }
@@ -58,8 +57,12 @@ class VerifyNewDeviceHandler
         if ($otp->getOtp() !== $command->otpCode) {
             throw new OtpInvalidException();
         }
-        $device->updateVerifiedAt(Carbon::now());
-        $this->deviceRepository->update($device);
+        foreach ($command->removeDeviceTokens as $removeDeviceToken) {
+            $removeDevice = $this->deviceRepository->getByDeviceToken($removeDeviceToken);
+            $removeDevice->updateIsActive(false);
+            $this->deviceRepository->update($removeDevice);
+        }
+
         $otp->updateStatus(OtpStatus::CONFIRMED);
         $this->otpRepository->update($otp);
         return $this->handleLogin($user, $device);

@@ -10,6 +10,12 @@ use League\Tactician\Handler\Locator\InMemoryLocator;
 use League\Tactician\Handler\MethodNameInflector\HandleInflector;
 use Src\Application\Auth\Command\LoginCommand;
 use Src\Application\Auth\Command\LoginHandler;
+use Src\Application\Auth\Command\SendOtpCommand;
+use Src\Application\Auth\Command\SendOtpHandler;
+use Src\Application\Auth\Command\VerifyNewDeviceCommand;
+use Src\Application\Auth\Command\VerifyNewDeviceHandler;
+use Src\Application\Auth\Command\VerifyRemoveDeviceCommand;
+use Src\Application\Auth\Command\VerifyRemoveDeviceHandler;
 
 class CommandHandlerServiceProvider extends ServiceProvider
 {
@@ -19,6 +25,9 @@ class CommandHandlerServiceProvider extends ServiceProvider
         $this->app->singleton(CommandBus::class, function () {
             $handlers = [
                 LoginCommand::class => app(LoginHandler::class),
+                SendOtpCommand::class => app(SendOtpHandler::class),
+                VerifyNewDeviceCommand::class => app(VerifyNewDeviceHandler::class),
+                VerifyRemoveDeviceCommand::class => app(VerifyRemoveDeviceHandler::class)
             ];
             $locator = new InMemoryLocator($handlers);
 
