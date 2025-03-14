@@ -23,11 +23,6 @@ class SendOtpHandler
     }
 
     /**
-     * Thiếu:
-     * Logic check số lần gửi otp trong 1h. Có đang bị block không cho gửi otp khi nhập sai quá nhiều lần không
-     */
-
-    /**
      * @throws DeviceNotFoundException
      * @throws UserNotFoundException
      */
