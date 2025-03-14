@@ -8,6 +8,7 @@ use Src\Domain\Auth\Enum\OtpPurpose;
 use Src\Domain\Auth\Exception\DeviceNotFoundException;
 use Src\Domain\Auth\Exception\OtpInvalidException;
 use Src\Domain\Auth\Exception\UserNotFoundException;
+use Src\Domain\Auth\Exception\VerifyOtpException;
 use Src\Domain\Auth\Repository\DeviceRepository;
 
 class VerifyNewDeviceHandler
@@ -19,20 +20,17 @@ class VerifyNewDeviceHandler
     }
 
     /**
-     * Thiếu:
-     * Logic báo otp đã expired
-     * Ghi log khi otp không hợp lệ
-     * Đếm số lần otp không hợp lệ để block user
-     * /
      *
      * /**
      * @throws DeviceNotFoundException
      * @throws UserNotFoundException
      * @throws OtpInvalidException
+     * @throws VerifyOtpException
      */
     public function handle(VerifyNewDeviceCommand $command): void
     {
         $device = $this->deviceRepository->getByDeviceToken($command->deviceToken);
+        $this->otpService->verifyOtpFailedTime($device->getUserId());
         $this->otpService->verify($device, OtpPurpose::NEW_DEVICE, $command->otpCode);
 
         $device->updateVerifiedAt(Carbon::now());

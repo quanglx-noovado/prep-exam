@@ -51,8 +51,19 @@ services:
             - mysql
         networks:
             - prep_network
+
+    redis:
+        image: redis:latest
+        container_name: prep_redis
+        ports:
+            - "6379:6379"
+        networks:
+            - prep_network
+        volumes:
+            - redis_data:/data
 volumes:
     mysql_data:
-
+    redis_data:
+        
 networks:
     prep_network:

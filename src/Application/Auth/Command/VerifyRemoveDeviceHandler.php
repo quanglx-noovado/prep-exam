@@ -7,6 +7,7 @@ use Src\Domain\Auth\Enum\OtpPurpose;
 use Src\Domain\Auth\Exception\DeviceNotFoundException;
 use Src\Domain\Auth\Exception\OtpInvalidException;
 use Src\Domain\Auth\Exception\UserNotFoundException;
+use Src\Domain\Auth\Exception\VerifyOtpException;
 use Src\Domain\Auth\Repository\DeviceRepository;
 
 class VerifyRemoveDeviceHandler
@@ -17,21 +18,17 @@ class VerifyRemoveDeviceHandler
     ) {
     }
 
-
-    /**
-     * Thiếu:
-     * Logic check số lần gửi otp trong 1h. Có đang bị block không cho gửi otp khi nhập sai quá nhiều lần không
-     */
-
     /**
      *
      * @throws DeviceNotFoundException
      * @throws UserNotFoundException
      * @throws OtpInvalidException
+     * @throws VerifyOtpException
      */
     public function handle(VerifyRemoveDeviceCommand $command): void
     {
         $device = $this->deviceRepository->getByDeviceToken($command->deviceToken);
+        $this->otpService->verifyOtpFailedTime($device->getUserId());
         $this->otpService->verify($device, OtpPurpose::REMOVE_DEVICE, $command->otpCode);
 
         foreach ($command->removeDeviceTokens as $removeDeviceToken) {
