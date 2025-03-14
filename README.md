@@ -66,11 +66,13 @@ php artisan passport:install
 - **API**: `POST /api/v1/verify-new-device`
 - **Giới hạn**: `POST /api/v1/verify-new-device`
     - Nhập sai không quá 5 lần
+    - Nếu nhập sai 5 lân sẽ bị block 30'
 
 ### 4. Xác thực viêc inactive thiết bị
 - **API**: `POST /api/v1/verify-remove-device`
 - **Giới hạn**: `POST /api/v1/verify-new-device`
     - Nhập sai không quá 5 lần
+    - Nếu nhập sai 5 lân sẽ bị block 30'
 
 ### 3. Quản lý thiết bị
 - **API**: `GET /api/v1/active-devices`
