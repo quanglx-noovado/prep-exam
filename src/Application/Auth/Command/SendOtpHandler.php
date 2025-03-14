@@ -2,14 +2,13 @@
 
 namespace Src\Application\Auth\Command;
 
+use App\Events\OtpCreatedEvent;
 use App\Helpers\StringHelper;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Redis;
-use Src\Application\Auth\Service\SendOTPFactory;
 use Src\Domain\Auth\Entity\Device;
 use Src\Domain\Auth\Entity\Otp;
 use Src\Domain\Auth\Entity\User;
-use Src\Domain\Auth\Enum\OtpSendType;
 use Src\Domain\Auth\Enum\OtpStatus;
 use Src\Domain\Auth\Enum\RedisKey;
 use Src\Domain\Auth\Exception\DeviceNotFoundException;
@@ -39,7 +38,8 @@ class SendOtpHandler
         $user = $this->userRepository->getById($device->getUserId());
         $this->verifySentOtpTime($user->getId());
         $otp = $this->createOtp($user, $device, $command);
-        $this->sendOtp($otp, $user, $command->type);
+
+        event(new OtpCreatedEvent($otp, $user));
     }
 
     /**
@@ -59,7 +59,7 @@ class SendOtpHandler
         Redis::set($lastSentKey, Carbon::now()->format('Y-m-d H:i:s'));
 
         if ($sentCount < 5) {
-            Redis::set($sentCountKey, $sentCount + 1);
+            Redis::set($sentCountKey, (Redis::get($sentCountKey) ?? 0) + 1);
         } else {
             Redis::set($sentCountKey, 1);
         }
@@ -78,11 +78,5 @@ class SendOtpHandler
             expiresAt: Carbon::now()->addMinutes(5)
         );
         return $this->otpRepository->create($entity);
-    }
-
-    private function sendOtp(Otp $otp, User $user, OtpSendType $type): void
-    {
-        $service = SendOTPFactory::create($type);
-        $service->sendOTP($otp, $user);
     }
 }

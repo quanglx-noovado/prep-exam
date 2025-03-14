@@ -15,10 +15,6 @@ use Src\Application\Auth\Command\VerifyRemoveDeviceCommand;
 use Src\Domain\Auth\Entity\Device;
 use Src\Domain\Auth\Enum\OtpPurpose;
 use Src\Domain\Auth\Enum\OtpSendType;
-use Src\Domain\Auth\Exception\DeviceLimitExceededException;
-use Src\Domain\Auth\Exception\DeviceNotFoundException;
-use Src\Domain\Auth\Exception\OtpInvalidException;
-use Src\Domain\Auth\Exception\UserNotFoundException;
 use Src\Domain\Auth\Repository\DeviceRepository;
 
 class AuthController extends BaseController
@@ -64,93 +60,51 @@ class AuthController extends BaseController
 
     public function verifyNewDevice(Request $request): JsonResponse
     {
-        try {
-            $command = new VerifyNewDeviceCommand(
-                deviceToken: $request->input('device_token'),
-                otpCode: $request->input('otp_code')
-            );
+        $command = new VerifyNewDeviceCommand(
+            deviceToken: $request->input('device_token'),
+            otpCode: $request->input('otp_code')
+        );
 
-            $token = $this->commandBus->handle($command);
+        $this->commandBus->handle($command);
 
-            return response()->json([
-                'success' => true,
-                'token' => $token
-            ]);
-        } catch (DeviceNotFoundException|UserNotFoundException $exception) {
-            return response()->json([
-                'message' => $exception->getMessage()
-            ], 404);
-        } catch (DeviceLimitExceededException $exception) {
-            return response()->json([
-                'status' => 'DEVICE_LIMIT_EXCEEDED',
-                'message' => $exception->getMessage(),
-                'device_token' => $exception->getDeviceToken(),
-            ], 400);
-        } catch (OtpInvalidException $exception) {
-            return response()->json([
-                'status' => 'OTP_INVALID',
-                'message' => $exception->getMessage()
-            ], 400);
-        }
+        return response()->json([
+            'success' => true,
+        ]);
     }
 
     public function verifyRemoveDevice(Request $request): JsonResponse
     {
-        try {
-            $command = new VerifyRemoveDeviceCommand(
-                deviceToken: $request->input('device_token'),
-                otpCode: $request->input('otp_code'),
-                removeDeviceTokens: $request->input('remove_device_tokens')
-            );
+        $command = new VerifyRemoveDeviceCommand(
+            deviceToken: $request->input('device_token'),
+            otpCode: $request->input('otp_code'),
+            removeDeviceTokens: $request->input('remove_device_tokens')
+        );
 
-            $token = $this->commandBus->handle($command);
+        $this->commandBus->handle($command);
 
-            return response()->json([
-                'success' => true,
-                'token' => $token
-            ]);
-        } catch (DeviceNotFoundException|UserNotFoundException $exception) {
-            return response()->json([
-                'message' => $exception->getMessage()
-            ], 404);
-        } catch (DeviceLimitExceededException $exception) {
-            return response()->json([
-                'status' => 'DEVICE_LIMIT_EXCEEDED',
-                'message' => $exception->getMessage(),
-                'device_token' => $exception->getDeviceToken(),
-            ], 400);
-        } catch (OtpInvalidException $exception) {
-            return response()->json([
-                'status' => 'OTP_INVALID',
-                'message' => $exception->getMessage()
-            ], 400);
-        }
+        return response()->json([
+            'success' => true,
+        ]);
     }
 
     public function getListActiveDevice(Request $request): JsonResponse
     {
-        try {
-            $device = $this->deviceRepository->getByDeviceToken($request->input('device_token'));
-            $listActive = $this->deviceRepository->getListActiveDevice($device->getUserId());
-            $data = array_map(static function (Device $device) {
-                return [
-                    'id' => $device->getId(),
-                    'device_token' => $device->getDeviceToken(),
-                    'name' => $device->getName(),
-                    'is_active' => $device->isActive(),
-                    'last_login_at' => $device->getLastLoginAt()?->format('Y-m-d H:i:s'),
-                ];
-            }, $listActive);
+        $device = $this->deviceRepository->getByDeviceToken($request->input('device_token'));
+        $listActive = $this->deviceRepository->getListActiveDevice($device->getUserId());
+        $data = array_map(static function (Device $device) {
+            return [
+                'id' => $device->getId(),
+                'device_token' => $device->getDeviceToken(),
+                'name' => $device->getName(),
+                'is_active' => $device->isActive(),
+                'last_login_at' => $device->getLastLoginAt()?->format('Y-m-d H:i:s'),
+            ];
+        }, $listActive);
 
 
-            return response()->json([
-                'success' => true,
-                'data' => $data
-            ]);
-        } catch (DeviceNotFoundException $exception) {
-            return response()->json([
-                'message' => $exception->getMessage()
-            ], 404);
-        }
+        return response()->json([
+            'success' => true,
+            'data' => $data
+        ]);
     }
 }

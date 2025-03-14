@@ -10,6 +10,21 @@ services:
             - .:/var/www/html
         networks:
             - prep_network
+        depends_on:
+            - redis
+    queue:
+        build:
+            context: ./docker
+            dockerfile: Dockerfile
+        container_name: prep_queue
+        volumes:
+            - .:/var/www/html
+        networks:
+            - prep_network
+        depends_on:
+            - redis
+            - app
+        command: php artisan queue:work --tries=3
 
     nginx:
         image: nginx:latest
@@ -64,6 +79,6 @@ services:
 volumes:
     mysql_data:
     redis_data:
-        
+
 networks:
     prep_network:
