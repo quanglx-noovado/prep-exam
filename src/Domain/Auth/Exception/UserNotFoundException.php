@@ -4,8 +4,8 @@ namespace Src\Domain\Auth\Exception;
 
 class UserNotFoundException extends \Exception
 {
-    public function __construct(string $message = "User not found", int $code = 404)
+    public function __construct(string $message = "User not found")
     {
-        parent::__construct($message, $code);
+        parent::__construct($message, 404);
     }
 }

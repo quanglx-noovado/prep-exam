@@ -4,8 +4,8 @@ namespace Src\Domain\Auth\Exception;
 
 class OtpInvalidException extends \Exception
 {
-    public function __construct(string $message = "Otp invalid exception", int $code = 422)
+    public function __construct(string $message = "Otp không hợp lệ")
     {
-        parent::__construct($message, $code);
+        parent::__construct($message, 422);
     }
 }

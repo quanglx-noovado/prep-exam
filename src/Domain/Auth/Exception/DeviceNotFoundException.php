@@ -4,8 +4,8 @@ namespace Src\Domain\Auth\Exception;
 
 class DeviceNotFoundException extends \Exception
 {
-    public function __construct(string $message = "Device not found", int $code = 404)
+    public function __construct(string $message = "Không tìm thấy thiết bị")
     {
-        parent::__construct($message, $code);
+        parent::__construct($message, 404);
     }
 }

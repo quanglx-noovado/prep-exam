@@ -54,7 +54,7 @@ class SendOtpHandler
         $lastSent = $lastSent === null ? null : Carbon::parse($lastSent);
 
         if ($sentCount >= 5 && !empty($lastSent) && $lastSent->addHour()->gt(Carbon::now())) {
-            throw new SendOtpException('Bạn đã yêu cầu OTP quá nhiều lần. Vui lòng thử lại sau 1 giờ.', 429);
+            throw new SendOtpException('Bạn đã yêu cầu OTP quá nhiều lần. Vui lòng thử lại sau 1 giờ.');
         }
         Redis::set($lastSentKey, Carbon::now()->format('Y-m-d H:i:s'));
 

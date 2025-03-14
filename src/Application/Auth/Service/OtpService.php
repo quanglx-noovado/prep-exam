@@ -37,7 +37,7 @@ class OtpService
 
         if ($otp->getExpiresAt()->isPast()) {
             $this->updateFailedCount($device->getUserId());
-            throw new OtpInvalidException('OTP has expired');
+            throw new OtpInvalidException('OTP đã hết hạn, vui lòng gửi lại OTP khác');
         }
 
         if ($otp->getOtp() !== $otpCode) {
@@ -62,7 +62,7 @@ class OtpService
         $lastFailed = $lastFailed === null ? null : Carbon::parse($lastFailed);
 
         if ($failedCount >= 5 && $lastFailed->addMinutes(30)->gt(Carbon::now())) {
-            throw new VerifyOtpException('Bạn đã nhập sai quá nhiều lần. Vui lòng thử lại sau 30', 429);
+            throw new VerifyOtpException('Bạn đã nhập sai quá nhiều lần. Vui lòng thử lại sau 30');
         }
     }
 

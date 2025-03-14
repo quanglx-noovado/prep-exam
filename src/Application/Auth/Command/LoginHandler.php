@@ -43,7 +43,7 @@ class LoginHandler
             $this->deviceRepository->update($device);
 
             if ($device->getVerifiedAt() === null) {
-                throw new DeviceInvalidException('New device detected. OTP verification required.', 422, $deviceToken);
+                throw new DeviceInvalidException('New device detected. OTP verification required.', $deviceToken);
             }
 
             if ($device->isActive()) {
@@ -103,7 +103,7 @@ class LoginHandler
 
         $this->deviceRepository->create($device);
 
-        throw new DeviceInvalidException('New device detected. OTP verification required.', 422, $deviceToken);
+        throw new DeviceInvalidException('New device detected. OTP verification required.', $deviceToken);
     }
 
     /**

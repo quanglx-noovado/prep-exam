@@ -22,7 +22,7 @@ class MysqlOtpRepository implements OtpRepository
             ->where('user_id', $userId)
             ->where('device_id', $deviceId)
             ->where('purpose', $purpose->value)
-//            ->where('status', OtpStatus::SENT->value)
+            ->where('status', OtpStatus::SENT->value)
             ->latest()
             ->first();
         if (!$model) {
