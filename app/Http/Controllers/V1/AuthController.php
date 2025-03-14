@@ -4,6 +4,8 @@ namespace App\Http\Controllers\V1;
 
 use App\Http\Requests\LoginRequest;
 use App\Http\Requests\SendOtpRequest;
+use App\Http\Requests\VerifyNewDeviceRequest;
+use App\Http\Requests\VerifyRemoveDeviceRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller as BaseController;
@@ -15,6 +17,7 @@ use Src\Application\Auth\Command\VerifyRemoveDeviceCommand;
 use Src\Domain\Auth\Entity\Device;
 use Src\Domain\Auth\Enum\OtpPurpose;
 use Src\Domain\Auth\Enum\OtpSendType;
+use Src\Domain\Auth\Exception\DeviceNotFoundException;
 use Src\Domain\Auth\Repository\DeviceRepository;
 
 class AuthController extends BaseController
@@ -58,7 +61,7 @@ class AuthController extends BaseController
         ]);
     }
 
-    public function verifyNewDevice(Request $request): JsonResponse
+    public function verifyNewDevice(VerifyNewDeviceRequest $request): JsonResponse
     {
         $command = new VerifyNewDeviceCommand(
             deviceToken: $request->input('device_token'),
@@ -72,7 +75,7 @@ class AuthController extends BaseController
         ]);
     }
 
-    public function verifyRemoveDevice(Request $request): JsonResponse
+    public function verifyRemoveDevice(VerifyRemoveDeviceRequest $request): JsonResponse
     {
         $command = new VerifyRemoveDeviceCommand(
             deviceToken: $request->input('device_token'),
@@ -87,6 +90,9 @@ class AuthController extends BaseController
         ]);
     }
 
+    /**
+     * @throws DeviceNotFoundException
+     */
     public function getListActiveDevice(Request $request): JsonResponse
     {
         $device = $this->deviceRepository->getByDeviceToken($request->input('device_token'));

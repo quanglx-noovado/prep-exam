@@ -38,12 +38,13 @@ class LoginHandler
 
         try {
             $device = $this->deviceRepository->getByUserAndFingerPrint($user->getId(), $command->fingerPrint);
-            $deviceToken = StringHelper::createDeviceToken($user->getId(), $device->getFingerPrint());
-            $device->updateDeviceToken($deviceToken);
-            $this->deviceRepository->update($device);
+            $this->updateDeviceToken($device);
 
             if ($device->getVerifiedAt() === null) {
-                throw new DeviceInvalidException('New device detected. OTP verification required.', $deviceToken);
+                throw new DeviceInvalidException(
+                    'Thiết bị chưa được xác thực. Vui lòng xác thực thiết bị.',
+                    $device->getDeviceToken()
+                );
             }
 
             if ($device->isActive()) {
@@ -54,6 +55,13 @@ class LoginHandler
         } catch (DeviceNotFoundException $exception) {
             $this->handleNewDevice($user, $command);
         }
+    }
+
+    private function updateDeviceToken(DeviceEntity $device): void
+    {
+        $deviceToken = StringHelper::createDeviceToken($device->getUserId(), $device->getFingerPrint());
+        $device->updateDeviceToken($deviceToken);
+        $this->deviceRepository->update($device);
     }
 
     private function handleActiveDevice(User $user, DeviceEntity $device): string

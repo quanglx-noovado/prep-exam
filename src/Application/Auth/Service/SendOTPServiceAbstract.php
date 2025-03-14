@@ -16,8 +16,8 @@ abstract class SendOTPServiceAbstract
     }
 
     abstract public function sendOTP(Otp $otp, User $user): void;
-    
-    public function updateSentOTP(Otp $otp): void
+
+    public function updateStatusOTP(Otp $otp): void
     {
         $otp->updateStatus(OtpStatus::SENT);
         $this->otpRepository->update($otp);

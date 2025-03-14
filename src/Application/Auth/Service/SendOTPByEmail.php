@@ -15,6 +15,6 @@ class SendOTPByEmail extends SendOTPServiceAbstract
                 ->subject('Gửi mã OTP');
         });
 
-        $this->updateSentOTP($otp);
+        $this->updateStatusOTP($otp);
     }
 }
