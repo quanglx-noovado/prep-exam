@@ -2,9 +2,12 @@
 
 namespace Src\Application\Auth\Service;
 
+use App\Helpers\StringHelper;
+use App\Jobs\WriteThroughOtpJob;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\Redis;
+use Illuminate\Support\Facades\Cache;
 use Src\Domain\Auth\Entity\Device;
+use Src\Domain\Auth\Entity\Otp;
 use Src\Domain\Auth\Enum\OtpPurpose;
 use Src\Domain\Auth\Enum\OtpStatus;
 use Src\Domain\Auth\Enum\RedisKey;
@@ -44,9 +47,18 @@ class OtpService
             $this->updateFailedCount($device->getUserId());
             throw new OtpInvalidException();
         }
-        $otp->updateStatus(OtpStatus::CONFIRMED);
-        $this->otpRepository->update($otp);
         $this->updateFailedCount($device->getUserId(), true);
+
+        $this->updateOtp($otp);
+    }
+
+    private function updateOtp(Otp $otp): void
+    {
+        $otp->updateStatus(OtpStatus::CONFIRMED);
+        $key = StringHelper::genCacheKeyOtp($otp);
+        Cache::put($key, $otp->toArray(), 60);
+
+        WriteThroughOtpJob::dispatch($otp);
     }
 
     /**
@@ -57,8 +69,8 @@ class OtpService
         $failedCountKey = RedisKey::FAILED_COUNT->value . $userId;
         $lastFailedKey = RedisKey::LAST_FAILED->value . $userId;
 
-        $failedCount = Redis::get($failedCountKey) ?? 0;
-        $lastFailed = Redis::get($lastFailedKey);
+        $failedCount = Cache::get($failedCountKey) ?? 0;
+        $lastFailed = Cache::get($lastFailedKey);
         $lastFailed = $lastFailed === null ? null : Carbon::parse($lastFailed);
 
         if ($failedCount >= 5 && $lastFailed->addMinutes(30)->gt(Carbon::now())) {
@@ -71,10 +83,10 @@ class OtpService
         $failedCountKey = RedisKey::FAILED_COUNT->value . $userId;
         $lastFailedKey = RedisKey::LAST_FAILED->value . $userId;
         if ($isVerify) {
-            Redis::set($failedCountKey, 0);
+            Cache::set($failedCountKey, 0);
         } else {
-            Redis::set($failedCountKey, Redis::get($failedCountKey) + 1);
-            Redis::set($lastFailedKey, Carbon::now()->format('Y-m-d H:i:s'));
+            Cache::set($failedCountKey, Cache::get($failedCountKey) + 1);
+            Cache::set($lastFailedKey, Carbon::now()->format('Y-m-d H:i:s'));
         }
     }
 }

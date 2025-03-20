@@ -26,7 +26,6 @@ class AuthController extends BaseController
         private readonly CommandBus $commandBus,
         private readonly DeviceRepository $deviceRepository
     ) {
-
     }
 
     public function login(LoginRequest $request): JsonResponse
@@ -35,7 +34,9 @@ class AuthController extends BaseController
             email: $request->input('email'),
             password: $request->input('password'),
             deviceName: $request->input('device_name'),
-            fingerPrint: $request->input('finger_print')
+            platform: $request->input('platform'),
+            userAgent: $request->input('user_agent'),
+            deviceId: $request->input('device_id'),
         );
 
         $token = $this->commandBus->handle($command);
@@ -106,7 +107,6 @@ class AuthController extends BaseController
                 'last_login_at' => $device->getLastLoginAt()?->format('Y-m-d H:i:s'),
             ];
         }, $listActive);
-
 
         return response()->json([
             'success' => true,

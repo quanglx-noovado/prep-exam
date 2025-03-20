@@ -3,6 +3,7 @@
 namespace Src\Application\Auth\Command;
 
 use Carbon\Carbon;
+use Src\Application\Auth\Service\DeviceService;
 use Src\Application\Auth\Service\OtpService;
 use Src\Domain\Auth\Enum\OtpPurpose;
 use Src\Domain\Auth\Exception\DeviceNotFoundException;
@@ -16,6 +17,7 @@ class VerifyNewDeviceHandler
     public function __construct(
         private readonly DeviceRepository $deviceRepository,
         private readonly OtpService $otpService,
+        private readonly DeviceService $deviceService,
     ) {
     }
 
@@ -34,6 +36,6 @@ class VerifyNewDeviceHandler
         $this->otpService->verify($device, OtpPurpose::NEW_DEVICE, $command->otpCode);
 
         $device->updateVerifiedAt(Carbon::now());
-        $this->deviceRepository->update($device);
+        $this->deviceService->updateDevice($device);
     }
 }
