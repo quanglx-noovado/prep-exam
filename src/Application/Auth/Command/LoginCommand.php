@@ -8,7 +8,9 @@ class LoginCommand
         public readonly string $email,
         public readonly string $password,
         public readonly string $deviceName,
-        public readonly string $fingerPrint
+        public readonly string $platform,
+        public readonly ?string $userAgent,
+        public readonly ?string $deviceId,
     ) {
     }
 }

@@ -71,4 +71,18 @@ class Otp
     {
         $this->status = $status;
     }
+
+    public function toArray(): array
+    {
+        return [
+            'id' => $this->id,
+            'userId' => $this->userId,
+            'deviceId' => $this->deviceId,
+            'otp' => $this->otp,
+            'sentType' => $this->sentType->value,
+            'status' => $this->status->value,
+            'purpose' => $this->purpose->value,
+            'expiresAt' => $this->expiresAt->format('Y-m-d H:i:s'),
+        ];
+    }
 }

@@ -2,6 +2,7 @@
 
 namespace Src\Application\Auth\Command;
 
+use Src\Application\Auth\Service\DeviceService;
 use Src\Application\Auth\Service\OtpService;
 use Src\Domain\Auth\Enum\OtpPurpose;
 use Src\Domain\Auth\Exception\DeviceNotFoundException;
@@ -15,6 +16,7 @@ class VerifyRemoveDeviceHandler
     public function __construct(
         private readonly OtpService $otpService,
         private readonly DeviceRepository $deviceRepository,
+        private readonly DeviceService $deviceService,
     ) {
     }
 
@@ -34,7 +36,7 @@ class VerifyRemoveDeviceHandler
         foreach ($command->removeDeviceTokens as $removeDeviceToken) {
             $removeDevice = $this->deviceRepository->getByDeviceToken($removeDeviceToken);
             $removeDevice->updateIsActive(false);
-            $this->deviceRepository->update($removeDevice);
+            $this->deviceService->updateDevice($removeDevice);
         }
     }
 }

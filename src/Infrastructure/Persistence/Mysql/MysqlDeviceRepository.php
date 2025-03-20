@@ -2,8 +2,10 @@
 
 namespace Src\Infrastructure\Persistence\Mysql;
 
+use App\Helpers\StringHelper;
 use App\Models\Device as DeviceModel;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Cache;
 use Src\Domain\Auth\Entity\Device;
 use Src\Domain\Auth\Exception\DeviceNotFoundException;
 use Src\Domain\Auth\Repository\DeviceRepository;
@@ -21,7 +23,7 @@ class MysqlDeviceRepository implements DeviceRepository
             throw new DeviceNotFoundException();
         }
 
-        return $this->buildEntity($device);
+        return $this->buildEntity($device->toArray());
     }
 
     /**
@@ -29,13 +31,17 @@ class MysqlDeviceRepository implements DeviceRepository
      */
     public function getByDeviceToken(string $deviceToken): Device
     {
-        $device = DeviceModel::query()->where('device_token', $deviceToken)->first();
+        $device = Cache::get(StringHelper::genCacheKeyDeviceToken($deviceToken));
+        if ($device) {
+            return $this->buildEntity($device);
+        }
 
+        $device = DeviceModel::query()->where('device_token', $deviceToken)->first();
         if (!$device) {
             throw new DeviceNotFoundException();
         }
 
-        return $this->buildEntity($device);
+        return $this->buildEntity($device->toArray());
     }
 
     public function update(Device $device): void
@@ -74,9 +80,22 @@ class MysqlDeviceRepository implements DeviceRepository
      */
     public function getListActiveDevice(int $userId): array
     {
+        $deviceIds = Cache::get(StringHelper::genCacheKeyDeviceActive($userId));
+        if ($deviceIds) {
+            $devices = DeviceModel::query()->whereIn('id', $deviceIds)->get()->toArray();
+            $data = [];
+            foreach ($devices as $device) {
+                $data[] = $this->buildEntity($device);
+            }
+
+            return $data;
+        }
+
         $devices = DeviceModel::query()->where('user_id', $userId)->where('is_active', true)->get();
+        $deviceIds = $devices->pluck('id')->toArray();
+        Cache::put(StringHelper::genCacheKeyDeviceActive($userId), $deviceIds);
         $data = [];
-        foreach ($devices as $device) {
+        foreach ($devices->toArray() as $device) {
             $data[] = $this->buildEntity($device);
         }
 
@@ -85,22 +104,27 @@ class MysqlDeviceRepository implements DeviceRepository
 
     public function countActiveDevice(int $userId): int
     {
+        $deviceIds = Cache::get(StringHelper::genCacheKeyDeviceActive($userId));
+        if ($deviceIds) {
+            return count($deviceIds);
+        }
+
         return DeviceModel::query()->where('user_id', $userId)->where('is_active', true)->count();
     }
 
-    private function buildEntity(DeviceModel $device): Device
+    private function buildEntity(array $device): Device
     {
         $entity = new Device(
-            userId: $device->user_id,
-            name: $device->name,
-            fingerPrint: $device->finger_print,
-            deviceToken: $device->device_token,
-            isActive: $device->is_active,
-            lastLoginAt: $device->last_login_at === null ? null : Carbon::parse($device->last_login_at),
-            verifiedAt: $device->verified_at === null ? null : Carbon::parse($device->verified_at),
+            userId: $device['user_id'],
+            name: $device['name'],
+            fingerPrint: $device['finger_print'],
+            deviceToken: $device['device_token'],
+            isActive: $device['is_active'],
+            lastLoginAt: $device['last_login_at'] === null ? null : Carbon::parse($device['last_login_at']),
+            verifiedAt: $device['verified_at'] === null ? null : Carbon::parse($device['verified_at']),
         );
 
-        $entity->setId($device->id);
+        $entity->setId($device['id']);
 
         return $entity;
     }

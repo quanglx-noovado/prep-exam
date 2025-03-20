@@ -5,6 +5,7 @@ namespace Src\Application\Auth\Command;
 use App\Helpers\StringHelper;
 use App\Models\Device;
 use Carbon\Carbon;
+use Src\Application\Auth\Service\DeviceService;
 use Src\Domain\Auth\AuthService;
 use Src\Domain\Auth\Entity\Device as DeviceEntity;
 use Src\Domain\Auth\Entity\User;
@@ -21,7 +22,8 @@ class LoginHandler
     public function __construct(
         private readonly UserRepository $userRepository,
         private readonly AuthService $authService,
-        private readonly DeviceRepository $deviceRepository
+        private readonly DeviceRepository $deviceRepository,
+        private readonly DeviceService $deviceService,
     ) {
     }
 
@@ -36,8 +38,10 @@ class LoginHandler
         $user = $this->userRepository->findByEmail($command->email);
         $this->verifyCredential($command, $user);
 
+        $fingerPrint = $this->generateFingerPrint($command);
+
         try {
-            $device = $this->deviceRepository->getByUserAndFingerPrint($user->getId(), $command->fingerPrint);
+            $device = $this->deviceRepository->getByUserAndFingerPrint($user->getId(), $fingerPrint);
             $this->updateDeviceToken($device);
 
             if ($device->getVerifiedAt() === null) {
@@ -53,21 +57,50 @@ class LoginHandler
 
             return $this->handleInactiveDevice($user, $device);
         } catch (DeviceNotFoundException $exception) {
-            $this->handleNewDevice($user, $command);
+            $this->handleNewDevice($user, $command, $fingerPrint);
         }
+    }
+
+    private function generateFingerPrint(LoginCommand $command): string
+    {
+        if ($command->platform === 'web') {
+            return $this->generateWebFingerprint($command);
+        }
+
+        return $this->generateMobileFingerprint($command);
+    }
+
+    private function generateWebFingerprint(LoginCommand $command): string
+    {
+        $data = [
+            'user_agent' => $command->userAgent,
+            'platform' => $command->platform,
+        ];
+
+        return StringHelper::generateFingerPrint($data);
+    }
+
+    private function generateMobileFingerprint(LoginCommand $command): string
+    {
+        $data = [
+            'device_id' => $command->deviceId,
+            'platform' => $command->platform,
+        ];
+
+        return StringHelper::generateFingerPrint($data);
     }
 
     private function updateDeviceToken(DeviceEntity $device): void
     {
         $deviceToken = StringHelper::createDeviceToken($device->getUserId(), $device->getFingerPrint());
         $device->updateDeviceToken($deviceToken);
-        $this->deviceRepository->update($device);
+        $this->deviceService->updateDevice($device);
     }
 
     private function handleActiveDevice(User $user, DeviceEntity $device): string
     {
         $device->updateLastLoginAt(Carbon::now());
-        $this->deviceRepository->update($device);
+        $this->deviceService->updateDevice($device);
 
         return $this->authService->generateToken($user);
     }
@@ -87,7 +120,7 @@ class LoginHandler
         }
         $device->updateIsActive(true);
         $device->updateLastLoginAt(Carbon::now());
-        $this->deviceRepository->update($device);
+        $this->deviceService->updateDevice($device);
 
         return $this->authService->generateToken($user);
     }
@@ -95,14 +128,14 @@ class LoginHandler
     /**
      * @throws DeviceInvalidException
      */
-    private function handleNewDevice(User $user, LoginCommand $command): never
+    private function handleNewDevice(User $user, LoginCommand $command, string $fingerPrint): never
     {
-        $deviceToken = StringHelper::createDeviceToken($user->getId(), $command->fingerPrint);
+        $deviceToken = StringHelper::createDeviceToken($user->getId(), $fingerPrint);
 
         $device = new DeviceEntity(
             userId: $user->getId(),
             name: $command->deviceName,
-            fingerPrint: $command->fingerPrint,
+            fingerPrint: $fingerPrint,
             deviceToken: $deviceToken,
             isActive: false,
             lastLoginAt: null,

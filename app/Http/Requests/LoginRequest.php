@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class LoginRequest extends FormRequest
 {
@@ -26,7 +27,9 @@ class LoginRequest extends FormRequest
             'email' => 'required|email',
             'password' => 'required|string',
             'device_name' => 'required|string',
-            'finger_print' => 'required|string'
+            'platform' => 'required|string|in:web,mobile',
+            'user_agent' => Rule::requiredIf($this->input('platform') === 'web'),
+            'device_id' => Rule::requiredIf($this->input('platform') === 'mobile'),
         ];
     }
 }

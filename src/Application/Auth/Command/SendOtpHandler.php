@@ -5,7 +5,7 @@ namespace Src\Application\Auth\Command;
 use App\Events\OtpCreatedEvent;
 use App\Helpers\StringHelper;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\Redis;
+use Illuminate\Support\Facades\Cache;
 use Src\Domain\Auth\Entity\Device;
 use Src\Domain\Auth\Entity\Otp;
 use Src\Domain\Auth\Entity\User;
@@ -49,19 +49,19 @@ class SendOtpHandler
     {
         $sentCountKey = RedisKey::SENT_COUNT->value . $userId;
         $lastSentKey = RedisKey::LAST_SENT->value . $userId;
-        $sentCount = Redis::get($sentCountKey) ?? 0;
-        $lastSent = Redis::get($lastSentKey);
+        $sentCount = Cache::get($sentCountKey) ?? 0;
+        $lastSent = Cache::get($lastSentKey);
         $lastSent = $lastSent === null ? null : Carbon::parse($lastSent);
 
         if ($sentCount >= 5 && !empty($lastSent) && $lastSent->addHour()->gt(Carbon::now())) {
             throw new SendOtpException('Bạn đã yêu cầu OTP quá nhiều lần. Vui lòng thử lại sau 1 giờ.');
         }
-        Redis::set($lastSentKey, Carbon::now()->format('Y-m-d H:i:s'));
+        Cache::set($lastSentKey, Carbon::now()->format('Y-m-d H:i:s'));
 
         if ($sentCount < 5) {
-            Redis::set($sentCountKey, (Redis::get($sentCountKey) ?? 0) + 1);
+            Cache::set($sentCountKey, (Cache::get($sentCountKey) ?? 0) + 1);
         } else {
-            Redis::set($sentCountKey, 1);
+            Cache::set($sentCountKey, 1);
         }
     }
 
@@ -77,6 +77,7 @@ class SendOtpHandler
             purpose: $command->purpose,
             expiresAt: Carbon::now()->addMinutes(5)
         );
+        
         return $this->otpRepository->create($entity);
     }
 }

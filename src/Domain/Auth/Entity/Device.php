@@ -86,4 +86,18 @@ class Device
     {
         $this->verifiedAt = $verifiedAt;
     }
+
+    public function toArray(): array
+    {
+        return [
+            'id' => $this->id,
+            'user_id' => $this->userId,
+            'name' => $this->name,
+            'finger_print' => $this->fingerPrint,
+            'device_token' => $this->deviceToken,
+            'is_active' => $this->isActive,
+            'last_login_at' => $this->lastLoginAt?->format('Y-m-d H:i:s'),
+            'verified_at' => $this->verifiedAt?->format('Y-m-d H:i:s'),
+        ];
+    }
 }
